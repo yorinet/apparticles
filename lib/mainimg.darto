@@ -1,0 +1,121 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:barcode_scan/barcode_scan.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+
+void main() {
+  runApp(const AppEasy());
+}
+
+class AppEasy extends StatefulWidget {
+  const AppEasy({super.key});
+
+  @override
+  State<AppEasy> createState() => _AppEasyState();
+}
+
+class _AppEasyState extends State<AppEasy> {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData.dark(),
+      debugShowCheckedModeBanner: false,
+      title: 'Easy APP',
+      home: home(),
+    );
+  }
+}
+
+class home extends StatefulWidget {
+  const home({super.key});
+
+  @override
+  State<home> createState() => _homeState();
+}
+
+class _homeState extends State<home> {
+  String barcode = "";
+  File? _avatar;
+  final ImagePicker imagePicker = ImagePicker();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: Center(
+      child: Column(
+        children: [
+          TextButton(
+              onPressed: () {
+                scan();
+              },
+              child: Text('BarCode')),
+          TextButton(
+              onPressed: () {
+                galleryImage();
+              },
+              child: Text('Folder')),
+          TextButton(
+              onPressed: () {
+                cameraImage();
+              },
+              child: Text('Camera')),
+          SizedBox(
+              height: 200,
+              child: Column(
+                children: [
+                  _avatar != null
+                      ? Image.file(_avatar!)
+                      : const Text('No image selected'),
+                  Text("$_avatar"),
+                ],
+              )),
+        ],
+      ),
+    ));
+  }
+
+  Future galleryImage() async {
+    final XFile? _file =
+        await imagePicker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      if (_file != null) {
+        _avatar = File(_file.path);
+      } else {
+        print('No file');
+      }
+    });
+  }
+
+  Future cameraImage() async {
+    final XFile? _file =
+        await imagePicker.pickImage(source: ImageSource.camera);
+    setState(() {
+      if (_file != null) {
+        _avatar = File(_file.path);
+      } else {
+        print('No file');
+      }
+    });
+  }
+
+  Future scan() async {
+    try {
+      String barcode = (await BarcodeScanner.scan()) as String;
+      setState(() => this.barcode = barcode);
+    } on PlatformException catch (e) {
+      if (e.code == BarcodeScanner.cameraAccessDenied) {
+        setState(() {
+          this.barcode = 'Camera permission not granted';
+        });
+      } else {
+        setState(() {
+          this.barcode = 'Unknown error: $e';
+        });
+      }
+    }
+  }
+}
